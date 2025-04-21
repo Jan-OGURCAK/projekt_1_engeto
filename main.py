@@ -34,25 +34,34 @@ TEXTS = [
 users = {"bob":"123", "ann":"pass123", "mike":"password123", "liz":"pass123"}
 
 data_global = {
-    "pocet_vet": len(TEXTS),
-    "pocet_slov": 0,
-    "zacatek_velkym": 0,
-    "psano_velkym": 0,
-    "psano_malym": 0,
-    "pocet_cisel": 0,
-    "suma_cisel": 0,
-    "veta_idx": 0,
-    "veta": None,
-    "chyba_vstupu": None}
+    "no_texts": len(TEXTS),
+    "no_words": 0,
+    "tilte_case": 0,
+    "up_case": 0,
+    "lo_case": 0,
+    "no_numbers": 0,
+    "sum_numbers": 0,
+    "text_idx": 0,
+    "selected_text": None,
+    "input_error": None}
 
-data_graf = []
+data_graf = {}
 
 def user_OK(users):
+    """
+        Funkce vyhodnocuje zadane parametry 'Username' a 'Password'
+        zadane vstupne parametry porovnava s predavanym slovnikem 'users'
 
+        Parametry:
+        :navrat: navtratova boolean hodnota user nalezen?
+
+        :data_global["input_error"]: Predpripraveny string s chybovym hlasenim
+
+    """
     navrat = False
 
-    user_name = input("username: ")
-    user_passw = input("password: ")
+    user_name = input("Username: ")
+    user_passw = input("Password: ")
 
     valid_password = users.get(user_name)
 
@@ -60,78 +69,129 @@ def user_OK(users):
         
         navrat = True
         print("-" * 40)
-        print("Welcome to the app,", user_name)
-        print(f"We have {data_global['pocet_vet']} texts to be analyzed.")
+        print("Vítej v aplikaci,", user_name)
+        print(f"máme připtaveno {data_global['no_texts']} texty na analýzu.")
         print("-" * 40)   
 
+    elif (valid_password is None):
+        data_global["input_error"] = f'Užívatel s loginem "{user_name}" nebyl nalezen!'
+    
     else:
-            
-        data_global["chyba_vstupu"] ="unregistered user, terminating the program.."
+        data_global["input_error"] = "Zadané heslo není platné!"   
 
-
-    return(navrat)
+    return navrat
 
 def vyber_textu_OK():
+
+    """
+        Funkce vyhodnocuje vstup z klavesnice a vybere text se kterym se bude pracovat
+
+        Parametry:
+        :navrat: navtratova boolean hodnota 'vyber textu OK?
+
+        :data_global["text_idx"]: Globalni promenna int s indexem vybraneho textu
+
+        :data_global["input_error"]: Predpripraveny string s chybovym hlasenim
+        
+
+    """
     vyber_OK = False
 
-    vstup = input(f"Enter a number btw. 1 and {data_global['pocet_vet']} to select: ")
+    vstup_txt = input(f"Zadej číslo mezi 1 a {data_global['no_texts']} pro výběr: ")
 
-
-    if (vstup.isnumeric()):
+    if (vstup_txt.isnumeric()): # Je to cislo
     
-        vstup = int(vstup)
+        vstup_int = int(vstup_txt)
 
-        pocet_vet = len(TEXTS)
-
-        if (0 < vstup <= data_global["pocet_vet"]):
+        if (0 < vstup_int <= data_global["no_texts"]): # A v platnem rozsahu
             
-            data_global["veta_idx"] = vstup -1
+            data_global["text_idx"] = vstup_int -1
             vyber_OK = True
     
-    if(not vyber_OK): data_global["chyba_vstupu"] = "Bad choice, terminating the program.. "
+    if(not vyber_OK): # Doslo k chybe vstupu
+        
+        data_global["input_error"] = f"Byla ocekávána číselná hodnota v limitu 1 až {data_global["no_texts"]} !"
 
-    return(vyber_OK)
+    return vyber_OK
 
 
 def priprav_vetu():
+    """
+        Funkce vybere zvolemou vetu a
+            - Vybere pouze alfanumeriske znaky
+            - Odstrani prebytecne znaky ' '
+
+        Parametry:
+        :'data_global["text_idx"]': Globalni parametr int: - poradi vety v slovniku 'TEXTS'
+
+        :'cista_veta': navratovy parametr str: - vybrana a vycistena veta
+        
+    """
     cista_veta = ""
 
-    data_global["veta"] = TEXTS[data_global["veta_idx"]] # Vyber 
+    data_global["selected_text"] = TEXTS[data_global["text_idx"]] # Vyber 
     
-    for znak in data_global["veta"]: # Vyberu pouze alfanumerika + " " 
+    for znak in data_global["selected_text"]: # Vyberu pouze alfanumerika + " " 
         if (znak.isalnum() or (znak == " ")): cista_veta += znak
 
     while (cista_veta.find("  ") >= 0): # Odstraneni vicenasobnych mezer
         cista_veta = cista_veta.replace("  ", " ")
 
-    return(cista_veta)
+    return cista_veta
 
 def analyza(cista_veta): # Vlasni analyza
+    """
+        Funkce provede vlastni analyzu
+
+        Parametry:
+        :'cista_veta' - predavany paremetr str: veta na zpracovani
+        :'data_global["xxxx"]' - soubor statistickych parametru
+
+        :'data_graf[delka_slova]' - soubor parametru int: - pocty slov dle delky pro graf
+    """
 
     slova = cista_veta.split(" ") # Vytvoreni listu slov
 
     for index, slovo in enumerate(slova): # A vyhodnocujem...
             
-        data_global["pocet_slov"] += 1  # Napocet pocet slov slova
-        data_graf[len(slovo)] += 1 # Napocet pro graf dle delky 
+        data_global["no_words"] += 1  # Napocet pocet slov slova
+
+        delka_slova = len(slovo)
+
+        if (data_graf.get(delka_slova) is None):
+            data_graf[delka_slova] = 0
+
+        data_graf[delka_slova] += 1 # Napocet pro graf dle delky 
 
         if (slovo.isnumeric()): # Je to cislo?
 
-            data_global["pocet_cisel"] += 1 # Napocet cisel
+            data_global["no_numbers"] += 1 # Napocet cisel
 
-            data_global["suma_cisel"] += int(slovo) # Napocet suma cisel
+            data_global["sum_numbers"] += int(slovo) # Napocet suma cisel
 
         else: # tak je to tedy string!
             
             if (slovo.isupper()): # Napocet vsecno velkym
-                data_global["psano_velkym"] += 1
-            elif (slovo[0:1].isupper()): # Napocet prvni znak velkym
-                data_global["zacatek_velkym"] += 1
+                data_global["up_case"] += 1
+            elif (slovo.istitle()): # Napocet prvni znak velkym
+                data_global["tilte_case"] += 1
 
             if (slovo.islower()): # Napocet vsechno malym
-                data_global["psano_malym"] += 1
+                data_global["lo_case"] += 1
             
 def vytvor_radek(delka_slova,poc_vyskytu):
+    """
+        Funkce vytvori radek grafu cetnosti slov dle delky
+
+        Parametry:
+
+        :'delka_slova': - int: delka slova
+
+        :'poc_vyskytu': - int: koliktat se dana delka slova vyskytuje v textu
+
+        :'navrat': - str: - navratovy parametr s hotovym radkem grafu
+
+    """
     navrat = ""
     pomI = 0
 
@@ -142,21 +202,30 @@ def vytvor_radek(delka_slova,poc_vyskytu):
     navrat += (20 - poc_vyskytu) * " " + "|"
     navrat += str(poc_vyskytu)
 
-    return(navrat)
+    return navrat
 
 
-def vytvor_vystup(data_global, data_graf):
+def vytvor_vystup():
+    """
+        Funkce vytvori graficky vystup programu
 
+        Parametry:
+        :'data_global["xxxx"]': - int: slovnik statistickych parametru vlastnosti slov
+
+        :'data_graf[xxx]': int: - list statistik slov dle delky
+
+
+    """
     # Vypis statistik
 
     print("-" * 40) # Podtrhnem...
 
-    print(f"There are {data_global["pocet_slov"]} words in the selected text.") # A vypiseme
-    print(f"There are {data_global["zacatek_velkym"]} titlecase words.") 
-    print(f"There are {data_global["psano_velkym"]} uppercase words.")   
-    print(f"There are {data_global["psano_malym"]} lowercase words.")   
-    print(f"There are {data_global["pocet_cisel"]} numeric strings.")   
-    print(f"The sum of all the numbers {data_global["suma_cisel"]}")
+    print(f"There are {data_global["no_words"]} words in the selected text.") # A vypiseme
+    print(f"There are {data_global["tilte_case"]} titlecase words.") 
+    print(f"There are {data_global["up_case"]} uppercase words.")   
+    print(f"There are {data_global["lo_case"]} lowercase words.")   
+    print(f"There are {data_global["no_numbers"]} numeric strings.")   
+    print(f"The sum of all the numbers {data_global["sum_numbers"]}")
 
     print("-" * 40) # Podtrhnem...
 
@@ -164,27 +233,33 @@ def vytvor_vystup(data_global, data_graf):
 
     print("-" * 40) # Podtrhnem...
 
-    for delka_slova, poc_vyskytu in enumerate(data_graf):
+    aktivni_klice = list(data_graf.keys())
+    aktivni_klice.sort() # Vytvorim list aktivnich klicu
 
-        if (poc_vyskytu > 0): print(vytvor_radek(delka_slova,poc_vyskytu))
+    for klic in aktivni_klice: # A vytvorim grafickou prezentaci
+
+        poc_vyskytu = data_graf[klic]
+
+        if (poc_vyskytu > 0): print(vytvor_radek(klic,poc_vyskytu))
 
 # =========================================================
 # =================== Vlastni program =====================
 # =========================================================
 
-for count in range(0,20):
-    data_graf.append(0)
-
 if (user_OK(users) and vyber_textu_OK()):
 
-    priprav_vetu()
     analyza(priprav_vetu())
-    vytvor_vystup(data_global, data_graf)
+    vytvor_vystup()
 
 else:
 
-    print(data_global["chyba_vstupu"])
+    print(2 * "\n")
 
+    print(data_global["input_error"], 2 * "\n")
+
+    print("Program byl ukončen!", end="\n")
+
+    print("Zkuste program znovu spustit s jinými parametry, popřípadě informujte správce systému.", 2* "\n")
 
 
 
